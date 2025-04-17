@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <h1 class="display-4 mb-4">Benvenuto su C-Recenzione</h1>
+                <p class="lead mb-4">
+                    Sistema avanzato per generare e inviare richieste di recensioni di prodotti alle aziende utilizzando l'intelligenza artificiale.
+                </p>
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-paper-plane me-2"></i> Invia Richieste
+                    </a>
+                    <a href="{{ url_for('reports') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-chart-bar me-2"></i> Visualizza Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-robot fa-3x mb-3 text-info"></i>
+                    <h3 class="card-title">Generazione AI</h3>
+                    <p class="card-text">Utilizza l'intelligenza artificiale per creare richieste di recensione personalizzate per ogni azienda e categoria di prodotto.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-envelope-open-text fa-3x mb-3 text-info"></i>
+                    <h3 class="card-title">Invio Automatico</h3>
+                    <p class="card-text">Invia facilmente le richieste generate direttamente alle aziende tramite email con un semplice clic.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-chart-line fa-3x mb-3 text-info"></i>
+                    <h3 class="card-title">Analisi dei Risultati</h3>
+                    <p class="card-text">Monitora l'andamento delle tue campagne con statistiche dettagliate e grafici intuitivi.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Categorie di Prodotti</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for category in categories %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ category.name }}</h5>
+                                    <p class="card-text text-muted">ID: {{ category.id }}</p>
+                                    <a href="{{ url_for('dashboard') }}?category={{ category.id }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-paper-plane me-2"></i> Invia Richieste
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Come Funziona</h3>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-numbered mb-0">
+                        <li class="list-group-item">Aggiungi aziende al database con le loro informazioni</li>
+                        <li class="list-group-item">Crea template di richiesta personalizzati per ogni categoria</li>
+                        <li class="list-group-item">Seleziona un'azienda e un template dalla dashboard</li>
+                        <li class="list-group-item">Genera una richiesta personalizzata con AI</li>
+                        <li class="list-group-item">Invia la richiesta direttamente all'azienda</li>
+                        <li class="list-group-item">Monitora i risultati e l'efficacia delle tue campagne</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Inizia Subito</h3>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">Scegli una delle seguenti opzioni per iniziare a utilizzare C-Recenzione:</p>
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('companies') }}" class="btn btn-outline-light">
+                            <i class="fas fa-building me-2"></i> Gestisci Aziende
+                        </a>
+                        <a href="{{ url_for('templates') }}" class="btn btn-outline-light">
+                            <i class="fas fa-file-alt me-2"></i> Gestisci Template
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                            <i class="fas fa-tachometer-alt me-2"></i> Vai alla Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

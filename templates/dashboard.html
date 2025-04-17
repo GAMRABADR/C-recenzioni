@@ -1,0 +1,181 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">Dashboard</h1>
+            <p class="text-muted">Genera e invia richieste di recensione personalizzate</p>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ companies|length }}</div>
+                <div class="label">Aziende</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ templates|length }}</div>
+                <div class="label">Template</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ requests|length }}</div>
+                <div class="label">Richieste Inviate</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ categories|length }}</div>
+                <div class="label">Categorie</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Genera Richiesta di Recensione</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label for="categoryFilterDashboard" class="form-label">Filtra per Categoria</label>
+                            <select class="form-select" id="categoryFilterDashboard">
+                                <option value="" selected>Tutte le categorie</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="companySelect" class="form-label">Seleziona Azienda</label>
+                            <select class="form-select" id="companySelect">
+                                <option value="" selected>Scegli un'azienda</option>
+                                {% for company in companies %}
+                                <option value="{{ company.id }}" data-category="{{ company.category }}">
+                                    {{ company.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="templateSelect" class="form-label">Seleziona Template</label>
+                            <select class="form-select" id="templateSelect">
+                                <option value="" selected>Scegli un template</option>
+                                {% for template in templates %}
+                                <option value="{{ template.id }}" data-category="{{ template.category }}">
+                                    {{ template.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-primary" id="generateRequestBtn">
+                            <i class="fas fa-sync-alt me-2"></i> 
+                            Genera Richiesta
+                            <span id="loadingIndicator" class="loading-indicator">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4" id="previewContainer" style="display: none;">
+                <div class="card-header">
+                    <h4 class="mb-0">Anteprima Richiesta</h4>
+                </div>
+                <div class="card-body">
+                    <div class="message-preview mb-3" id="messagePreview"></div>
+                    <div class="d-grid">
+                        <button class="btn btn-success" id="sendRequestBtn" disabled>
+                            <i class="fas fa-paper-plane me-2"></i> 
+                            Invia Richiesta
+                            <span id="sendLoadingIndicator" class="loading-indicator">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Ultime Richieste Inviate</h4>
+                    <a href="{{ url_for('reports') }}" class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-chart-bar me-1"></i> Vedi Tutti i Report
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Azienda</th>
+                                    <th>Data Invio</th>
+                                    <th>Categoria</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if requests %}
+                                    {% set latest_requests = requests[-5:]|reverse %}
+                                    {% for req in latest_requests %}
+                                    <tr>
+                                        <td>{{ req.company_name }}</td>
+                                        <td>{{ req.date_sent|replace("T", " ")|truncate(16, True, "") }}</td>
+                                        <td>
+                                            {% for category in categories %}
+                                                {% if category.id == req.category %}
+                                                    <span class="badge bg-info">{{ category.name }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% if req.status == 'delivered' %}
+                                                <span class="badge bg-success">Consegnata</span>
+                                            {% elif req.status == 'pending' %}
+                                                <span class="badge bg-warning">In attesa</span>
+                                            {% elif req.status == 'failed' %}
+                                                <span class="badge bg-danger">Fallita</span>
+                                            {% endif %}
+                                            
+                                            {% if req.opened %}
+                                                <span class="badge bg-info">Aperta</span>
+                                            {% endif %}
+                                            
+                                            {% if req.responded %}
+                                                <span class="badge bg-primary">Risposta</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <div class="empty-state">
+                                                <div class="icon">
+                                                    <i class="fas fa-paper-plane"></i>
+                                                </div>
+                                                <div class="message">Nessuna richiesta inviata</div>
+                                                <p class="text-muted">Genera e invia la tua prima richiesta utilizzando il modulo sopra</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

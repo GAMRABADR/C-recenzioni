@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mb-0">Email Locali</h1>
+                <div>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-home me-2"></i> Home
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+            <p class="text-muted">Visualizzazione delle email salvate localmente (solo in modalità debug)</p>
+        </div>
+    </div>
+    
+    {% if emails %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> 
+                    <strong>Email in modalità locale:</strong> Le email non vengono inviate tramite SMTP, ma vengono salvate localmente come file JSON.
+                </div>
+            </div>
+        </div>
+        
+        {% for email in emails %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Email a: {{ email.to }}</h5>
+                    <span class="badge bg-info">{{ email.created_at }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Oggetto:</strong> {{ email.subject }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Corpo:</strong>
+                        <div class="message-preview mt-2">{{ email.body|safe }}</div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">File: {{ email.filename }}</small>
+                        <small class="text-muted">Data: {{ email.date }}</small>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="empty-state">
+                            <div class="icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="message">Nessuna email locale trovata</div>
+                            <p class="text-muted mb-4">Le email locali appariranno qui quando vengono generate in modalità debug.</p>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i> Invia una Richiesta
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

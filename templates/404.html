@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center py-5">
+            <h1 class="display-1 mb-4 text-warning">404</h1>
+            <h2 class="mb-4">Pagina non trovata</h2>
+            <p class="lead mb-5">La pagina che stai cercando non esiste o è stata spostata.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i> Torna alla homepage
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "tech",
+    "name": "Tecnologia"
+  },
+  {
+    "id": "food",
+    "name": "Alimentari"
+  },
+  {
+    "id": "fashion",
+    "name": "Moda"
+  },
+  {
+    "id": "home",
+    "name": "Casa e Arredamento"
+  },
+  {
+    "id": "beauty",
+    "name": "Bellezza e Cura Personale"
+  }
+]

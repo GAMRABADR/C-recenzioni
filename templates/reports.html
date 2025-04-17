@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">Report e Statistiche</h1>
+            <p class="text-muted">Analisi dettagliata delle richieste di recensione inviate</p>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ stats.total }}</div>
+                <div class="label">Richieste Totali</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ stats.delivered }}</div>
+                <div class="label">Consegnate</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ stats.opened }}</div>
+                <div class="label">Aperte</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card stats-card">
+                <div class="number">{{ stats.responded }}</div>
+                <div class="label">Risposte</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4 class="mb-0">Stato delle Richieste</h4>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" data-chart-id="statusChart">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4 class="mb-0">Tassi di Conversione</h4>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" data-chart-id="ratesChart">
+                        <canvas id="ratesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Statistiche per Categoria</h4>
+                </div>
+                <div class="card-body" id="categoryChartsContainer">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="chart-container" data-chart-id="categoryChart">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="chart-container" data-chart-id="categoryPerformanceChart">
+                                <canvas id="categoryPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Registro Richieste</h4>
+                    <button class="btn btn-sm btn-outline-info" id="exportDataBtn">
+                        <i class="fas fa-download me-1"></i> Esporta Dati
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Azienda</th>
+                                    <th>Email</th>
+                                    <th>Categoria</th>
+                                    <th>Data Invio</th>
+                                    <th>Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if requests %}
+                                    {% for req in requests|reverse %}
+                                    <tr>
+                                        <td><small class="text-muted">{{ req.id[:8] }}</small></td>
+                                        <td>{{ req.company_name }}</td>
+                                        <td>{{ req.email }}</td>
+                                        <td>
+                                            {% for category in categories %}
+                                                {% if category.id == req.category %}
+                                                    <span class="badge bg-info">{{ category.name }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ req.date_sent|replace("T", " ")|truncate(16, True, "") }}</td>
+                                        <td>
+                                            {% if req.status == 'delivered' %}
+                                                <span class="badge bg-success">Consegnata</span>
+                                            {% elif req.status == 'pending' %}
+                                                <span class="badge bg-warning">In attesa</span>
+                                            {% elif req.status == 'failed' %}
+                                                <span class="badge bg-danger">Fallita</span>
+                                            {% endif %}
+                                            
+                                            {% if req.opened %}
+                                                <span class="badge bg-info">Aperta</span>
+                                            {% endif %}
+                                            
+                                            {% if req.responded %}
+                                                <span class="badge bg-primary">Risposta</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="empty-state">
+                                                <div class="icon">
+                                                    <i class="fas fa-chart-pie"></i>
+                                                </div>
+                                                <div class="message">Nessun dato disponibile</div>
+                                                <p class="text-muted">I dati appariranno qui dopo l'invio delle prime richieste</p>
+                                                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                                                    <i class="fas fa-paper-plane me-2"></i> Invia Richieste
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    const categoryStats = {{ category_stats|tojson }};
+    const stats = {{ stats|tojson }};
+    const chartData = {
+        stats: stats,
+        category_stats: categoryStats
+    };
+    
+    initializeCharts(chartData);
+    
+    // Export data functionality
+    const exportBtn = document.getElementById('exportDataBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const requests = {{ requests|tojson }};
+            
+            if (requests.length === 0) {
+                showAlert('Nessun dato da esportare', 'warning');
+                return;
+            }
+            
+            // Convert data to CSV
+            let csv = 'ID,Azienda,Email,Categoria,Data Invio,Stato,Aperto,Risposto\n';
+            requests.forEach(req => {
+                csv += `${req.id},${req.company_name},${req.email},${req.category},${req.date_sent},${req.status},${req.opened},${req.responded}\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'crequest_data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert('Dati esportati con successo', 'success');
+        });
+    }
+});
+</script>
+{% endblock %}

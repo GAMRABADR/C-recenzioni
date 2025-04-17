@@ -1,0 +1,226 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">Impostazioni</h1>
+            <p class="text-muted">Configura le impostazioni dell'applicazione</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Configurazione API Locale (Kobold)</h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('save_settings') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="koboldApiUrl" class="form-label">URL API Kobold</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="koboldApiUrl" name="kobold_api_url" 
+                                       value="{{ current_settings.get('kobold_api_url', 'http://localhost:5001/api') }}"
+                                       placeholder="http://localhost:5001/api">
+                                <button class="btn btn-outline-secondary" type="button" id="testConnectionBtn">
+                                    <i class="fas fa-sync-alt me-1"></i> Test
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Indirizzo dell'API Kobold in esecuzione localmente o su un altro server.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="useFallback" name="use_fallback" 
+                                       {% if current_settings.get('use_fallback', False) %}checked{% endif %}>
+                                <label class="form-check-label" for="useFallback">
+                                    Usa template semplici se l'API non è disponibile
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                Se abilitato, l'applicazione utilizzerà un sistema semplice di sostituzione quando l'API Kobold non è disponibile.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="maxLength" class="form-label">Lunghezza massima della generazione</label>
+                            <input type="number" class="form-control" id="maxLength" name="max_length" 
+                                   value="{{ current_settings.get('max_length', 1000) }}" min="100" max="2000">
+                            <div class="form-text">
+                                Numero massimo di token da generare (default: 1000).
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">Temperatura: {{ current_settings.get('temperature', 0.7) }}</label>
+                            <input type="range" class="form-range" id="temperature" name="temperature" 
+                                   value="{{ current_settings.get('temperature', 0.7) }}" min="0.1" max="1.0" step="0.1">
+                            <div class="form-text">
+                                Controlla la casualità delle risposte (0.1 = molto deterministico, 1.0 = molto creativo).
+                            </div>
+                        </div>
+                        
+                        <div id="connectionStatus"></div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Salva Impostazioni
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Informazioni sull'AI Locale</h4>
+                </div>
+                <div class="card-body">
+                    <div id="modelInfo">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Caricamento...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Recupero informazioni sul modello...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const testConnectionBtn = document.getElementById('testConnectionBtn');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const temperatureInput = document.getElementById('temperature');
+    const temperatureLabel = document.querySelector('label[for="temperature"]');
+    
+    // Aggiorna il valore della temperatura quando cambia
+    temperatureInput.addEventListener('input', function() {
+        temperatureLabel.textContent = `Temperatura: ${this.value}`;
+    });
+    
+    // Test della connessione all'API Kobold
+    if (testConnectionBtn) {
+        testConnectionBtn.addEventListener('click', function() {
+            const apiUrl = document.getElementById('koboldApiUrl').value;
+            connectionStatus.innerHTML = `
+                <div class="alert alert-info mt-3">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Verifica in corso...</span>
+                        </div>
+                        <div>Test di connessione in corso...</div>
+                    </div>
+                </div>
+            `;
+            
+            // Chiamata API per testare la connessione
+            fetch('/test_kobold_connection', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    api_url: apiUrl
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    connectionStatus.innerHTML = `
+                        <div class="alert alert-success mt-3">
+                            <i class="fas fa-check-circle me-2"></i> Connessione stabilita! L'API Kobold è raggiungibile.
+                        </div>
+                    `;
+                    getModelInfo(apiUrl);
+                } else {
+                    connectionStatus.innerHTML = `
+                        <div class="alert alert-danger mt-3">
+                            <i class="fas fa-exclamation-circle me-2"></i> Impossibile connettersi all'API Kobold: ${data.error}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                connectionStatus.innerHTML = `
+                    <div class="alert alert-danger mt-3">
+                        <i class="fas fa-exclamation-circle me-2"></i> Errore di rete: ${error.message}
+                    </div>
+                `;
+            });
+        });
+    }
+    
+    // Recupera informazioni sul modello
+    function getModelInfo(apiUrl) {
+        const modelInfoDiv = document.getElementById('modelInfo');
+        
+        fetch('/get_kobold_model_info', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                api_url: apiUrl || document.getElementById('koboldApiUrl').value
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.model_info) {
+                const info = data.model_info;
+                
+                modelInfoDiv.innerHTML = `
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <th>Nome Modello</th>
+                                    <td>${info.model_name || 'Non disponibile'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Dimensione</th>
+                                    <td>${info.model_size || 'Non disponibile'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Stato</th>
+                                    <td><span class="badge bg-success">In esecuzione</span></td>
+                                </tr>
+                                <tr>
+                                    <th>Versione Kobold</th>
+                                    <td>${info.version || 'Non disponibile'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                modelInfoDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Impossibile recuperare informazioni sul modello.
+                        <p class="mt-2 mb-0 small">${data.error || 'Assicurati che l\'API Kobold sia in esecuzione e configurata correttamente.'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            modelInfoDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i> Errore di rete: ${error.message}
+                </div>
+            `;
+        });
+    }
+    
+    // Inizializza con un tentativo di recupero delle informazioni sul modello
+    getModelInfo();
+});
+</script>
+{% endblock %}
